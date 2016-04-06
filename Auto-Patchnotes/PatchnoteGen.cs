@@ -17,7 +17,7 @@ namespace PatchnoteGenerator
         public static List<string> notes = new List<string>();
         public static List<string> changelists = new List<string>();
 
-        public static void StartSlimParse(string changelist1, string changelist2, string branch)
+        public static void StartParse(string changelist1, string changelist2, string branch)
         {
             string currentDirectory = Directory.GetCurrentDirectory();
             string tempFile = currentDirectory + @"\Patchnotes\PatchnotesSlimTemp.txt";
@@ -50,23 +50,29 @@ namespace PatchnoteGenerator
                 notes.Add(stringSeparator);
                 while ((line = file.ReadLine()) != null)
                 {
-                    if (line.Contains("HEADLESS.APB") || line.Contains("AutoMate: Binaries") || line.Contains("Updating SDD") || line.Contains("StripOutEditorData"))
-                    {
-                        unusedNotes.Add(line);
-                    }
-                    else if (line.Contains("Change "))
-                    {
-                        string changelist = Regex.Match(line, @"\d{6}").Value;
-                        unusedNotes.Add(line);
-                        notes.Add(stringSeparator);
-                        notes.Add(changelist);
-                        changelists.Add(changelist);
-                    }
-                    else
-                    {
-                        notes.Add(line);
-                        GetNames(line, branch);
-                    }
+                    notes.Add(line);
+                    GetNames(line, branch);
+
+
+                    // This isn't necessary for simple patchnotes. Re-enable if your perforce often contains integrates/merges, and customise accordingly
+
+                    //if (line.Contains("[unwanted line]")
+                    //{
+                    //    unusedNotes.Add(line);
+                    //}
+                    //else if (line.Contains("Change by person @changelist "))
+                    //{
+                    //    string changelist = Regex.Match(line, @"\d{6}").Value;
+                    //    unusedNotes.Add(line);
+                    //    notes.Add(stringSeparator);
+                    //    notes.Add(changelist);
+                    //    changelists.Add(changelist);
+                    //}
+                    //else
+                    //{
+                    //    notes.Add(line);
+                    //    GetNames(line, branch);
+                    //}
                 }
             }
 
@@ -162,29 +168,10 @@ namespace PatchnoteGenerator
                 string[] branches = branch.Split('/');
                 string branchNum = string.Empty;
 
-                if (newBranch.Contains("UPGRADE"))
+                branchStart = @"//depot/";
+                if (!string.IsNullOrEmpty(newBranch))
                 {
-                    branchStart = @"//depot/APB/Branches/Upgrade/";
-                }
-                else if (newBranch.Contains("IMPORT_"))
-                {
-                    branchStart = @"//Console/Branches/Import/";
-                }
-                else if (newBranch.Contains("FUTURE"))
-                {
-                    branchStart = @"//depot/APB/Branches/Future/";
-                }
-                else if (branches[2] == "depot")
-                {
-                    branchStart = @"//depot/APB/Branches/Versions/";
-                    if (!string.IsNullOrEmpty(newBranch))
-                    {
-                        branchNum = newBranch.Remove(newBranch.IndexOf('_')) + '/';
-                    }
-                }
-                else
-                {
-                    branchStart = @"//Console/Branches/";
+                    branchNum = newBranch.Remove(newBranch.IndexOf('_')) + '/';
                 }
 
                 if (!changelists.Contains(changelist))
